@@ -13,7 +13,7 @@ before_build:
   - cmd: SET ARCH=x64
   - cmd: SET NODIST_X64=1
   - cmd: call nodist update
-  - cmd: call nodist 0.12.7
+  - cmd: call nodist stable
   - cmd: npm install -g node-gyp
   - cmd: echo Build done
 
