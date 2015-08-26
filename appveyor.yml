@@ -6,9 +6,23 @@ environment:
 # to add several platforms to build matrix:
 platform:
   - x64
-  - x32
+
+
+before_build:
+  - cmd: echo Setting up build
+  - cmd: SET ARCH=x64
+  - cmd: SET NODIST_X64=1
+  - cmd: call nodist update
+  - cmd: call nodist stable
+  - cmd: npm install -g node-gyp
+  - cmd: echo Build done
 
 install:
-  - cmd: echo Starting build
-  - cmd: npm install -g node-gyp
+  - cmd: echo Installing external tools
+  - cmd: git clone https://github.com/marcelklehr/nodist.git c:\nodist 2>&1
+  - cmd: SET PATH=C:\nodist\bin;%PATH%
+  - cmd: SET NODIST_PREFIX=C:\nodist
+
+build_script:
   - cmd: npm install
+
