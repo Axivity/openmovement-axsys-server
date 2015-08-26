@@ -8,4 +8,7 @@ platform:
   - x64
   - x32
 
-
+install:
+  - cmd: echo Starting build
+  - cmd: npm install -g node-gyp
+  - cmd: npm install
