@@ -1,0 +1,12 @@
+{
+  "name": "om-axsys-server",
+  "version": "0.1.0",
+  "author": {
+    "name": "Praveen Kumar",
+    "email": "3.pravin@gmail.com"
+  },
+  "dependencies": {
+    "node-gyp": "^2.0.2",
+    "node-pre-gyp": "^0.6.9"
+  }
+}
