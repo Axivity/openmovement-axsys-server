@@ -5,8 +5,19 @@
     "name": "Praveen Kumar",
     "email": "3.pravin@gmail.com"
   },
+  "binary": {
+    "module_name": "devicefinder",
+    "module_path": "./build/{module_name}/v{version}/{configuration}/{node_abi}-{platform}-{arch}/",
+    "package_name": "{node_abi}-{platform}-{arch}.tar.gz"
+  },
   "dependencies": {
-    "node-gyp": "^2.0.2",
-    "node-pre-gyp": "^0.6.9"
+    "nan": "1.8.4",
+    "node-gyp": "2.0.2",
+    "node-pre-gyp": "0.6.9"
+  },
+  "scripts": {
+    "install": "node-gyp clean && node-gyp configure && node-gyp build"
   }
+
+
 }
