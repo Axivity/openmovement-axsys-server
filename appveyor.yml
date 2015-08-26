@@ -1,0 +1,11 @@
+# environment variables
+environment:
+  matrix:
+  - nodejs_version: "0.12"
+  
+# to add several platforms to build matrix:
+platform:
+  - x64
+  - x32
+
+
