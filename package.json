@@ -17,7 +17,7 @@
   },
   "scripts": {
     "install": "node-gyp clean && node-gyp configure && node-gyp build",
-    "test": "jest"
+    "test": "gulp --verbose"
   },
   "devDependencies": {
     "chai": "^3.2.0",

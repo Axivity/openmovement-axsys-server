@@ -20,5 +20,5 @@ install:
 
 build_script:
   - cmd: npm install -msvs_version=2012
-  - cmd: ./node_modules/gulp/bin/gulp.js
+  - cmd: npm test
 
