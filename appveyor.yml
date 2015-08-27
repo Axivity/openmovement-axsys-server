@@ -9,15 +9,16 @@ platform:
 
 
 before_build:
-  - cmd: echo Setting up build
+  - cmd: echo Building
   - cmd: npm install -g node-gyp
   - cmd: echo Build done
 
 install:
   - cmd: echo Installing external tools
   - ps: Install-Product node 0.12 x64
-  - cmd: echo No external tools to install
+  - cmd: echo node installed
 
 build_script:
   - cmd: npm install -msvs_version=2012
+  - cmd: gulp
 
