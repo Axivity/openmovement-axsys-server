@@ -13,7 +13,8 @@
   "dependencies": {
     "nan": "1.8.4",
     "node-gyp": "2.0.2",
-    "node-pre-gyp": "0.6.9"
+    "node-pre-gyp": "0.6.9",
+    "serialport": "git+https://github.com/Axivity/node-serialport.git"
   },
   "scripts": {
     "install": "node-gyp clean && node-gyp configure && node-gyp build",
