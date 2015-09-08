@@ -15,11 +15,14 @@
     "nan": "1.8.4",
     "node-gyp": "2.0.2",
     "node-pre-gyp": "0.6.9",
+    "pouchdb": "^4.0.1",
+    "pouchdb-find": "^0.3.5",
     "serialport": "git+https://github.com/Axivity/node-serialport.git"
   },
   "scripts": {
     "install": "node-gyp clean && node-gyp configure && node-gyp build",
-    "test": "gulp test --verbose"
+    "test": "gulp test --verbose",
+    "start": "gulp server --verbose"
   },
   "devDependencies": {
     "babel": "^5.8.23",
@@ -31,10 +34,12 @@
     "gulp-concat": "^2.6.0",
     "gulp-eslint": "^1.0.0",
     "gulp-mocha": "^2.1.3",
+    "gulp-nodemon": "^2.0.4",
     "gulp-sourcemaps": "^1.5.2",
     "mocha": "^2.2.5",
     "node-gyp": "^2.0.2",
     "node-pre-gyp": "^0.6.9",
+    "nodemon": "^1.4.1",
     "sinon": "^1.16.1",
     "sinon-chai": "^2.8.0"
   }

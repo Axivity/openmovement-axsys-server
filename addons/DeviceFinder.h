@@ -35,7 +35,7 @@
 #include <map>
 
 //#if DEBUG
-#if 1
+#if 0
 #define Log(level, ...) ((level), fprintf(stdout, __VA_ARGS__))	
 #else
 #define Log(level, ...) do {} while(0)
