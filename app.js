@@ -1,4 +1,5 @@
 /* System imports */
+import path from 'path';
 
 /* Third party imports */
 import eio from 'express.io';
@@ -15,9 +16,16 @@ const DEVICES_DATABASE_NAME = 'axsys-devices';
 function main() {
     let app = eio();
     app.http().io();
+
+    // setup db service and device discovery
     createDBAndStartDeviceDiscovery();
+
     // setup routes for client
     register_module.register(app);
+
+    // setup static route for client.min.js
+    setUpRouteForClientLibrary(app);
+
     app.listen(9693);
 }
 
@@ -36,4 +44,17 @@ function createDBAndStartDeviceDiscovery() {
     });
 }
 
+function secureOriginsToServe(app) {
+    // setup origins
+    app.io.set('origins', 'http://localhost:9692');
+}
+
+function setUpRouteForClientLibrary(app) {
+    // setup route for serving client
+    app.get('/client.min.js', (req, res) => {
+        res.sendfile(path.join(__dirname, 'dist-client/client.min.js'));
+    });
+}
+
+/* Init app */
 main();

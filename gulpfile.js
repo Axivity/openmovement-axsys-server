@@ -3,15 +3,18 @@
  */
 
 var gulp        = require('gulp');
-var sourcemaps  = require("gulp-sourcemaps");
-var babel       = require("gulp-babel");
-var concat      = require("gulp-concat");
+var fs          = require('fs');
+var browserify  = require('browserify');
+var sourcemaps  = require('gulp-sourcemaps');
+var babel       = require('gulp-babel');
+var concat      = require('gulp-concat');
 var mocha       = require('gulp-mocha');
 var eslint      = require('gulp-eslint');
 var nodemon     = require('gulp-nodemon');
-//var spawn = require('child_process').spawn;
-
-//var node;
+var uglify      = require('gulp-uglify');
+var rename      = require('gulp-rename');
+var babelify    = require('babelify');
+var source      = require('vinyl-source-stream');
 
 gulp.task('test', function () {
     var babel_c       = require('babel/register');
@@ -44,16 +47,16 @@ gulp.task('server', function () {
 
 });
 
-//gulp.task('server', function() {
-//    if (node) node.kill();
-//    node = spawn('node', ['server.js'], {stdio: 'inherit'});
-//    node.on('close', function (code) {
-//        if (code === 8) {
-//            gulp.log('Error detected, waiting for changes...');
-//        }
-//    });
-//    gulp.run('server');
-//    gulp.watch(['./app.js', './lib/**/*.js', 'lib/*.js'], function() {
-//        gulp.run('server')
-//    });
-//});
+gulp.task('dist-client', function() {
+    var options = {
+        entries: './client-lib/client.js',
+        debug: true
+    };
+
+    browserify(options)
+        .transform(babelify)
+        .bundle()
+        .on('error', function(err) {console.error(err); this.emit('end');} )
+        .pipe(source('client.min.js'))
+        .pipe(gulp.dest('dist-client'));
+});
