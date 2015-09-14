@@ -15,6 +15,7 @@ var uglify      = require('gulp-uglify');
 var rename      = require('gulp-rename');
 var babelify    = require('babelify');
 var source      = require('vinyl-source-stream');
+var buffer      = require('vinyl-buffer');
 
 gulp.task('test', function () {
     var babel_c       = require('babel/register');
@@ -58,5 +59,7 @@ gulp.task('dist-client', function() {
         .bundle()
         .on('error', function(err) {console.error(err); this.emit('end');} )
         .pipe(source('client.min.js'))
+        .pipe(buffer())
+        .pipe(uglify())
         .pipe(gulp.dest('dist-client'));
 });

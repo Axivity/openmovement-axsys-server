@@ -8,20 +8,25 @@ import eio from 'express.io';
 import * as register_module from './lib/register-client';
 import * as dbService from './lib/services/pouchdb-service';
 import * as discoveryService from './lib/services/devicediscovery-service';
+import * as websocketFacade from './lib/api/websocket';
 
 /* Global constants */
 const DEVICES_DATABASE_NAME = 'axsys-devices';
+let DEVICES_DB;
+
 
 /* main */
 function main() {
     let app = eio();
     app.http().io();
 
-    // setup db service and device discovery
-    createDBAndStartDeviceDiscovery();
-
-    // setup routes for client
     register_module.register(app);
+
+    // setup db service and device discovery
+    createDBAndStartDeviceDiscovery().then((db) => {
+        // setup routes for client
+        websocketFacade.websocketSetup(app, dbService, db);
+    });
 
     // setup static route for client.min.js
     setUpRouteForClientLibrary(app);
@@ -31,7 +36,7 @@ function main() {
 
 function createDBAndStartDeviceDiscovery() {
     // create db and start device discovery
-    dbService.createDatabase(DEVICES_DATABASE_NAME).then((db) => {
+    return dbService.createDatabase(DEVICES_DATABASE_NAME).then((db) => {
         let deviceDiscoverer = new discoveryService.DeviceDiscovery({
             dbService: dbService,
             db: db,
@@ -41,11 +46,15 @@ function createDBAndStartDeviceDiscovery() {
         });
 
         deviceDiscoverer.start();
+        return db;
+
+    }).catch((err) => {
+        console.error(err);
     });
 }
 
 function secureOriginsToServe(app) {
-    // setup origins
+    // setup origins - TODO: this list should be externalized
     app.io.set('origins', 'http://localhost:9692');
 }
 
