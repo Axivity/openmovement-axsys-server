@@ -8,11 +8,15 @@ import eio from 'express.io';
 import * as register_module from './lib/register-client';
 import * as dbService from './lib/services/pouchdb-service';
 import * as discoveryService from './lib/services/devicediscovery-service';
+import { EventBus } from './lib/services/bus';
+import * as constants from './lib/services/event-name-constants';
 import * as websocketFacade from './lib/api/websocket';
 
 /* Global constants */
 const DEVICES_DATABASE_NAME = 'axsys-devices';
+
 let DEVICES_DB;
+let eventBus = new EventBus();
 
 
 /* main */
@@ -26,6 +30,9 @@ function main() {
     createDBAndStartDeviceDiscovery().then((db) => {
         // setup routes for client
         websocketFacade.websocketSetup(app, dbService, db);
+
+        // subscribe to events
+        subscribeToEvents(db);
     });
 
     // setup static route for client.min.js
@@ -34,12 +41,17 @@ function main() {
     app.listen(9693);
 }
 
+function subscribeToEvents(db) {
+    eventBus.subscribe(constants.AX_DEVICE_ADDED, dbService.onDeviceAdded(db));
+    eventBus.subscribe(constants.AX_DEVICE_REMOVED, dbService.onDeviceRemoved(db));
+
+}
+
 function createDBAndStartDeviceDiscovery() {
     // create db and start device discovery
     return dbService.createDatabase(DEVICES_DATABASE_NAME).then((db) => {
         let deviceDiscoverer = new discoveryService.DeviceDiscovery({
-            dbService: dbService,
-            db: db,
+            eventBus: eventBus,
             vidPids: [
                 0x04D80057
             ]
