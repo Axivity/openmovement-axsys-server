@@ -11,6 +11,7 @@ import * as discoveryService from './lib/services/devicediscovery-service';
 import { EventBus } from './lib/services/bus';
 import * as constants from './lib/services/event-name-constants';
 import * as websocketFacade from './lib/api/websocket';
+import * as socketBroadcastService from './lib/services/socket-broadcast-service';
 
 /* Global constants */
 const DEVICES_DATABASE_NAME = 'axsys-devices';
@@ -32,7 +33,7 @@ function main() {
         websocketFacade.websocketSetup(app, dbService, db);
 
         // subscribe to events
-        subscribeToEvents(db);
+        subscribeToEvents(db, app);
     });
 
     // setup static route for client.min.js
@@ -41,9 +42,13 @@ function main() {
     app.listen(9693);
 }
 
-function subscribeToEvents(db) {
+function subscribeToEvents(db, app) {
     eventBus.subscribe(constants.AX_DEVICE_ADDED, dbService.onDeviceAdded(db));
     eventBus.subscribe(constants.AX_DEVICE_REMOVED, dbService.onDeviceRemoved(db));
+
+    // TODO: Maybe this can be refactored. We don't need DB to come up to push on socket!
+    eventBus.subscribe(constants.AX_DEVICE_ADDED, socketBroadcastService.onDeviceAdded(app));
+    eventBus.subscribe(constants.AX_DEVICE_REMOVED, socketBroadcastService.onDeviceRemoved(app));
 
 }
 
