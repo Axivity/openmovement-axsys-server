@@ -2,6 +2,7 @@
  * Created by Praveen on 08/09/2015.
  */
 
+import { hasError, getData } from '../lib/api/payload';
 import * as io from 'socket.io-client';
 import * as constants from '../lib/services/event-name-constants';
 
@@ -20,8 +21,11 @@ function API(onDeviceAdded,
     /*
     * */
     this.getDevices = (callback) => {
-        sock.emit(constants.AX_CLIENT_DEVICES_GET_ALL, (devices) => {
-            callback(devices);
+        sock.emit(constants.AX_CLIENT_DEVICES_GET_ALL, (payload) => {
+            if(!hasError(payload)) {
+                let devices = getData(payload);
+                callback(devices);
+            }
         });
     };
 
@@ -31,13 +35,18 @@ function API(onDeviceAdded,
 
         sock.on(constants.AX_DEVICE_ADDED, (payload) => {
             console.log(payload);
-            onDeviceAdded(payload);
-
+            if(!hasError(payload)) {
+                let data = getData(payload);
+                onDeviceAdded(data);
+            }
         });
 
         sock.on(constants.AX_DEVICE_REMOVED, (payload) => {
             console.log(payload);
-            onDeviceRemoved(payload);
+            if(!hasError(payload)) {
+                let data = getData(payload);
+                onDeviceRemoved(data);
+            }
 
         });
 

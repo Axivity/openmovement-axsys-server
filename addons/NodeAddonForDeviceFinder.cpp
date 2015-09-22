@@ -165,6 +165,9 @@ static Handle<Object> buildJSDeviceObject(const DeviceAddedOrRemovedBaton *baton
 
 
 void added_or_removed_device(uv_async_t *handle) {
+	//TODO: Refactor this function to have 1 switch statement?
+	DeviceAddedOrRemovedBaton *baton;
+
 	try {
 		// consume async messages from added_callback or removed_callback.
 		// NB: This will run in main thread (node/v8), so safer to use NanCallbacks
@@ -172,24 +175,23 @@ void added_or_removed_device(uv_async_t *handle) {
 		
 		mtx.lock();
 		
-		DeviceAddedOrRemovedBaton *baton = static_cast<DeviceAddedOrRemovedBaton *>(handle->data);
+	    baton = static_cast<DeviceAddedOrRemovedBaton *>(handle->data);
 		Handle<Object> devObj = buildJSDeviceObject(baton);
 		Handle<Value> argv[] = {
+			NanUndefined(),
 			devObj
 		};
-
-		
 
 		switch (baton->eventType) {
 			case (EventType::Added) :
 
-				baton->onDeviceAdded->Call(1, argv);
+				baton->onDeviceAdded->Call(2, argv);
 				
 				break;
 
 			case (EventType::Removed) :
 
-				baton->onDeviceRemoved->Call(1, argv);
+				baton->onDeviceRemoved->Call(2, argv);
 				
 				break;
 
@@ -205,9 +207,27 @@ void added_or_removed_device(uv_async_t *handle) {
 	}
 
 	catch (...) {
-		//
-		// Do nothing?
-		return NanThrowError("Failed when passing device when calling callback function");
+		
+		Handle<Value> argv[2];
+		argv[0] = v8::Exception::Error(NanNew<String>("Error fetching added/removed device details"));
+		argv[1] = NanUndefined();
+		switch (baton->eventType) {
+			case (EventType::Added) :
+
+				baton->onDeviceAdded->Call(2, argv);
+
+				break;
+
+			case (EventType::Removed) :
+
+				baton->onDeviceRemoved->Call(2, argv);
+
+				break;
+
+			default:
+				break;
+		}
+
 	}
 	
 }
