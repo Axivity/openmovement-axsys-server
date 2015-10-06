@@ -2,7 +2,8 @@
 import path from 'path';
 
 /* Third party imports */
-import eio from 'express.io';
+//import eio from 'express.io';
+import eio from 'express.oi';
 
 /* Internal imports */
 import * as register_module from './lib/register-client';
@@ -15,6 +16,7 @@ import * as socketBroadcastService from './lib/services/socket-broadcast-service
 
 /* Global constants */
 const DEVICES_DATABASE_NAME = 'axsys-devices';
+
 
 let DEVICES_DB;
 let eventBus = new EventBus();
@@ -78,7 +80,7 @@ function secureOriginsToServe(app) {
 function setUpRouteForClientLibrary(app) {
     // setup route for serving client
     app.get('/client.min.js', (req, res) => {
-        res.sendfile(path.join(__dirname, 'dist-client/client.min.js'));
+        res.sendFile(path.join(__dirname, 'dist-client/client.min.js'));
     });
 }
 

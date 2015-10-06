@@ -2,9 +2,11 @@
  * Created by Praveen on 08/09/2015.
  */
 
-import { hasError, getData, getError } from '../lib/api/payload';
 import * as io from 'socket.io-client';
+
+import { hasError, getData, getError } from '../lib/api/payload';
 import * as constants from '../lib/services/event-name-constants';
+import * as binUtils from '../lib/utils/binary';
 
 var AX = window.AX || {};
 
@@ -12,6 +14,7 @@ function API(onDeviceAdded,
              onDeviceRemoved,
              onConnected,
              onDisconnected,
+             onDataReceived,
              clientKey) {
 
     clientKey = clientKey || "Booo";
@@ -42,6 +45,31 @@ function API(onDeviceAdded,
         });
     };
 
+    this.write = (options, callback) => {
+        sock.emit(constants.AX_DEVICE_WRITE, options, (payload) => {
+           if(!hasError(payload)) {
+               let data = getData(payload);
+               callback(null, data);
+           } else {
+               let error = getError(payload);
+               callback(error, null);
+           }
+        });
+    };
+
+    this.disconnect = (options, callback) => {
+        sock.emit(constants.AX_DEVICE_DISCONNECT, options, (payload) => {
+            if(!hasError(payload)) {
+                let data = getData(payload);
+                callback(null, data);
+            } else {
+                let error = getError(payload);
+                callback(error, null);
+            }
+        });
+
+    };
+
     this.init = () => {
         // TODO: Find a sensible place to put key (may be a config file?)
         sock.emit(constants.AX_CLIENT_REGISTER, { "key": clientKey } );
@@ -70,6 +98,22 @@ function API(onDeviceAdded,
         sock.on(constants.AX_CLIENT_OR_SERVER_CONNECT, () => {
             console.log('Connection established');
             onConnected();
+        });
+
+        sock.on(constants.AX_ON_DATA, (payload) => {
+            console.log('I have data');
+            console.log(payload);
+        });
+
+        console.log('Setting up data listener');
+        sock.on(constants.AX_CLIENT_DATA, (payload) => {
+            console.log('Got some data');
+            console.log(payload.buffer);
+            //console.log(payload.toString());
+            let dataReceived = binUtils.bufferToString(payload.buffer);
+            payload['dataString'] = dataReceived;
+            console.log(dataReceived);
+            onDataReceived(payload);
         });
     };
 

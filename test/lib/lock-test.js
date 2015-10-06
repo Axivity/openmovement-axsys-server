@@ -9,7 +9,8 @@ import * as lockModule from '../../lib/lock';
 
 describe('Lock module', () => {
 
-    let path = 'serial://COM123/';
+    let path = 'serial://COM123/',
+        lockedBy = 'abc123';
 
     describe('when there is no lock', () => {
         it('should return false when hasLock function is invoked', () => {
@@ -20,7 +21,7 @@ describe('Lock module', () => {
 
     describe('check if a path can be locked', () => {
        it('when lock function is invoked', () => {
-            let locked = lockModule.lock(path);
+            let locked = lockModule.lock(path, lockedBy);
             expect(locked).to.be.true;
        });
     });
@@ -34,7 +35,7 @@ describe('Lock module', () => {
 
     describe('when locked already', () => {
         it('cannot lock it again', () => {
-            let lockTriedAgain = lockModule.lock(path);
+            let lockTriedAgain = lockModule.lock(path, lockedBy);
             expect(lockTriedAgain).to.be.false;
         });
 
