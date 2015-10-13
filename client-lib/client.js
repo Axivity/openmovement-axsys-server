@@ -101,26 +101,41 @@ function API(onDeviceAdded,
     console.log(conn);
 
     /*
+    *
     * */
     this.getDevices = (callback) => {
         conn.send(constants.AX_CLIENT_DEVICES_GET_ALL, {}, callback);
     };
 
+
+    /*
+     * */
     this.connect = (options, callback) => {
         conn.send(constants.AX_DEVICE_CONNECT, options, callback);
 
     };
 
+    /*
+     * */
     this.write = (options, callback) => {
         conn.send(constants.AX_DEVICE_WRITE, options, callback);
     };
 
+    /*
+     * */
     this.disconnect = (options, callback) => {
         conn.send(constants.AX_DEVICE_DISCONNECT, options, callback);
     };
 
+    /*
+     *  Internal Only - called to register any global event handlers
+     **/
     this.init = () => {
-
+        // Add a data listener
+        conn.addCallbackForEvent(constants.AX_CLIENT_DATA, (payload) => {
+            // TODO: We could manipulate array buffer here??
+            onDataReceived(payload);
+        });
     };
 
     this.init();
