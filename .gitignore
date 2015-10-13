@@ -4,3 +4,4 @@ build/*
 axsys-devices/*
 axsys_sample_db/*
 dist-client/*
+out/*

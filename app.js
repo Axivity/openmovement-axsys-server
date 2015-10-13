@@ -3,7 +3,10 @@ import path from 'path';
 
 /* Third party imports */
 //import eio from 'express.io';
-import eio from 'express.oi';
+//import eio from 'express.oi';
+import http from 'http';
+import { Server as WebSocketServer } from 'ws';
+import express from 'express';
 
 /* Internal imports */
 import * as register_module from './lib/register-client';
@@ -11,7 +14,7 @@ import * as dbService from './lib/services/pouchdb-service';
 import * as discoveryService from './lib/services/devicediscovery-service';
 import { EventBus } from './lib/services/bus';
 import * as constants from './lib/services/event-name-constants';
-import * as websocketFacade from './lib/api/websocket';
+import * as websocketFacade from './lib/api/websocket-api';
 import * as socketBroadcastService from './lib/services/socket-broadcast-service';
 
 /* Global constants */
@@ -24,34 +27,59 @@ let eventBus = new EventBus();
 
 /* main */
 function main() {
-    let app = eio();
-    app.http().io();
+    //let app = eio();
+    //app.http().io();
+
+    var server = http.createServer();
+    var wss = new WebSocketServer( {'server': server} );
+    var app = express();
 
     register_module.register(app);
 
     // setup db service and device discovery
     createDBAndStartDeviceDiscovery().then((db) => {
         // setup routes for client
-        websocketFacade.websocketSetup(app, dbService, db);
+        websocketFacade.websocketSetup(wss, dbService, db);
 
         // subscribe to events
-        subscribeToEvents(db, app);
+        subscribeDBEvents(db);
     });
+
+    subscribeSocketEvents(wss);
 
     // setup static route for client.min.js
     setUpRouteForClientLibrary(app);
 
-    app.listen(9693);
+    server.on('request', app);
+    server.listen(9693);
 }
 
-function subscribeToEvents(db, app) {
+function subscribeDBEvents(db) {
     eventBus.subscribe(constants.AX_DEVICE_ADDED, dbService.onDeviceAdded(db));
     eventBus.subscribe(constants.AX_DEVICE_REMOVED, dbService.onDeviceRemoved(db));
+}
 
+
+function subscribeSocketEvents(sock) {
     // TODO: Maybe this can be refactored. We don't need DB to come up to push on socket!
-    eventBus.subscribe(constants.AX_DEVICE_ADDED, socketBroadcastService.onDeviceAdded(app));
-    eventBus.subscribe(constants.AX_DEVICE_REMOVED, socketBroadcastService.onDeviceRemoved(app));
+    eventBus.subscribe(constants.AX_DEVICE_ADDED, function (device) {
+        sock.clients.forEach(function (client) {
+            console.log(device);
+            client.send(JSON.stringify({
+                'event': constants.AX_DEVICE_ADDED,
+                'data': device
+            }));
+        });
+    });
 
+    eventBus.subscribe(constants.AX_DEVICE_REMOVED, function (device) {
+        sock.clients.forEach(function (client) {
+            client.send(JSON.stringify({
+                'event': constants.AX_DEVICE_REMOVED,
+                'data': device
+            }));
+        });
+    });
 }
 
 function createDBAndStartDeviceDiscovery() {
@@ -86,3 +114,4 @@ function setUpRouteForClientLibrary(app) {
 
 /* Init app */
 main();
+

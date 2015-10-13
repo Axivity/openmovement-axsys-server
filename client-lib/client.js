@@ -10,6 +10,86 @@ import * as binUtils from '../lib/utils/binary';
 
 var AX = window.AX || {};
 
+
+function WebSocketConnection(onConnected, clientKey) {
+
+    var ws = new WebSocket('ws://localhost:9693/');
+    ws.binaryType = "arraybuffer";
+
+    var self = this;
+
+    self.clientKey = clientKey || "default-key";
+
+    self.callbacks = {};
+
+    ws.onmessage = function(event) {
+        let msg = JSON.parse(event.data);
+        console.log(msg);
+
+        if(msg) {
+            let eventName = msg.event;
+            console.log(eventName);
+
+            let fns = self.callbacks[eventName];
+
+            if(fns) {
+                let payload = msg.data;
+                console.log(payload);
+
+                fns.forEach((fn) => {
+                    if(!hasError(payload)) {
+                        fn(getData(payload));
+
+                    }
+                    // TODO: How should the error be propagated??
+                    //else {
+                    //    fn(new Error(), null);
+                    //}
+
+                } );
+
+            } else {
+                console.warn('No callbacks registered for event ' + eventName );
+            }
+
+        }
+
+    };
+
+    ws.onopen = function () {
+        onConnected();
+    };
+
+
+    function addCallbackForEvent(event, callback) {
+        console.log(event);
+        console.log(callback);
+
+        console.log(self.callbacks);
+        if(self.callbacks[event] === undefined) {
+            self.callbacks[event] = [];
+        }
+        self.callbacks[event].push(callback);
+    }
+
+    function send(event, data, callback) {
+        var msg = {
+            'event': event,
+            'data': data
+        };
+
+        // assumes event name for both sending and receiving data is same
+        addCallbackForEvent(event, callback);
+        ws.send(JSON.stringify(msg));
+    }
+
+    return {
+        'addCallbackForEvent': addCallbackForEvent,
+        'send': send
+    }
+
+}
+
 function API(onDeviceAdded,
              onDeviceRemoved,
              onConnected,
@@ -17,104 +97,30 @@ function API(onDeviceAdded,
              onDataReceived,
              clientKey) {
 
-    clientKey = clientKey || "Booo";
-
-    var sock = io.connect("http://localhost:9693");
+    var conn = new WebSocketConnection(onConnected, clientKey);
+    console.log(conn);
 
     /*
     * */
     this.getDevices = (callback) => {
-        sock.emit(constants.AX_CLIENT_DEVICES_GET_ALL, (payload) => {
-            if(!hasError(payload)) {
-                let devices = getData(payload);
-                callback(devices);
-            }
-        });
+        conn.send(constants.AX_CLIENT_DEVICES_GET_ALL, {}, callback);
     };
 
     this.connect = (options, callback) => {
-        sock.emit(constants.AX_DEVICE_CONNECT, options, (payload) => {
-            if(!hasError(payload)) {
-                let data = getData(payload);
-                callback(null, data);
+        conn.send(constants.AX_DEVICE_CONNECT, options, callback);
 
-            } else {
-                let error = getError(payload);
-                callback(error, null);
-            }
-        });
     };
 
     this.write = (options, callback) => {
-        sock.emit(constants.AX_DEVICE_WRITE, options, (payload) => {
-           if(!hasError(payload)) {
-               let data = getData(payload);
-               callback(null, data);
-           } else {
-               let error = getError(payload);
-               callback(error, null);
-           }
-        });
+        conn.send(constants.AX_DEVICE_WRITE, options, callback);
     };
 
     this.disconnect = (options, callback) => {
-        sock.emit(constants.AX_DEVICE_DISCONNECT, options, (payload) => {
-            if(!hasError(payload)) {
-                let data = getData(payload);
-                callback(null, data);
-            } else {
-                let error = getError(payload);
-                callback(error, null);
-            }
-        });
-
+        conn.send(constants.AX_DEVICE_DISCONNECT, options, callback);
     };
 
     this.init = () => {
-        // TODO: Find a sensible place to put key (may be a config file?)
-        sock.emit(constants.AX_CLIENT_REGISTER, { "key": clientKey } );
 
-        sock.on(constants.AX_DEVICE_ADDED, (payload) => {
-            console.log(payload);
-            if(!hasError(payload)) {
-                let data = getData(payload);
-                onDeviceAdded(data);
-            }
-        });
-
-        sock.on(constants.AX_DEVICE_REMOVED, (payload) => {
-            console.log(payload);
-            if(!hasError(payload)) {
-                let data = getData(payload);
-                onDeviceRemoved(data);
-            }
-        });
-
-        sock.on(constants.AX_CLIENT_OR_SERVER_DISCONNECT, () => {
-            console.log('Disconnected');
-            onDisconnected();
-        });
-
-        sock.on(constants.AX_CLIENT_OR_SERVER_CONNECT, () => {
-            console.log('Connection established');
-            onConnected();
-        });
-
-        sock.on(constants.AX_ON_DATA, (payload) => {
-            console.log('I have data');
-            console.log(payload);
-        });
-
-        console.log('Setting up data listener');
-        sock.on(constants.AX_CLIENT_DATA, (payload) => {
-            console.log('Got some data');
-            console.log(payload.buffer);
-            //console.log(payload.toString());
-            let dataReceived = binUtils.bufferToString(payload.buffer);
-            payload['dataString'] = dataReceived;
-            console.log(dataReceived);
-            onDataReceived(payload);
-        });
     };
 
     this.init();
