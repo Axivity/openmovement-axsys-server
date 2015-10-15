@@ -9,48 +9,107 @@ import * as constants from '../lib/services/event-name-constants';
 
 var AX = window.AX || {};
 
-class API {
-    constructor(onDeviceAdded,
-                onDeviceRemoved,
-                onConnected,
-                onDisconnected,
-                onDataReceived,
-                clientKey) {
-        this.onDeviceAdded = onDeviceAdded;
-        this.onDeviceRemoved = onDeviceRemoved;
-        this.onConnected = onConnected;
-        this.onDisconnected = onDisconnected;
-        this.onDataReceived = onDataReceived;
-        this.conn = new WebSocketConnection(clientKey);
-        this.connectedDevices = {};
-        this.__init();
-    }
+function WebSocketConnection(onConnected, clientKey) {
 
-    __init() {
-        new ConnectionAPI(
-            this.onDeviceAdded,
-            this.onDeviceRemoved,
-            this.onConnected,
-            this.onDisconnected,
-            this.conn
-        ).init();
+    var ws = new WebSocket('ws://localhost:9693/');
+    ws.binaryType = "arraybuffer";
 
-    }
+    var self = this;
 
-    connect(options, callbackpath) {
-        let conn = new DeviceAPI(this.onDataReceived, this.conn);
-        this.connectedDevices[path] = conn;
-        conn.connect(options, callback);
-    }
+    self.clientKey = clientKey || "default-key";
 
-    write(options, callback) {
+    self.callbacks = {};
 
-    }
+    ws.onopen = function() {
+        onConnected();
+    };
+
+    ws.onmessage = function(event) {
+        let msg = JSON.parse(event.data);
+        console.log(msg);
+
+        if(msg) {
+            let eventName = msg.event;
+            console.log(eventName);
+
+            let fns = self.callbacks[eventName];
+
+            if(fns) {
+                let payload = msg.data;
+                console.log(payload);
+
+                fns.forEach((fn) => {
+                    if(!hasError(payload)) {
+                        fn(getData(payload));
+
+                    }
+                    // TODO: How should the error be propagated??
+                    //else {
+                    //    fn(new Error(), null);
+                    //}
+
+                } );
+
+            } else {
+                console.warn('No callbacks registered for event ' + eventName );
+            }
+
+        }
+
+    };
 
 
+ }
+
+function API(onDeviceAdded,
+             onDeviceRemoved,
+             onConnected,
+             onDisconnected,
+             onDataReceived,
+             clientKey) {
+
+    var conn = new WebSocketConnection(onConnected, clientKey);
+    console.log(conn);
+
+    /*
+    *
+    * */
+    this.getDevices = (callback) => {
+        conn.send(constants.AX_CLIENT_DEVICES_GET_ALL, {}, callback);
+    };
 
 
+    /*
+     * */
+    this.connect = (options, callback) => {
+        conn.send(constants.AX_DEVICE_CONNECT, options, callback);
 
+    };
+
+    /*
+     * */
+    this.write = (options, callback) => {
+        conn.send(constants.AX_DEVICE_WRITE, options, callback);
+    };
+
+    /*
+     * */
+    this.disconnect = (options, callback) => {
+        conn.send(constants.AX_DEVICE_DISCONNECT, options, callback);
+    };
+
+    /*
+     *  Internal Only - called to register any global event handlers
+     **/
+    this.init = () => {
+        // Add a data listener
+        conn.addCallbackForEvent(constants.AX_CLIENT_DATA, (payload) => {
+            // TODO: We could manipulate array buffer here??
+            onDataReceived(payload);
+        });
+    };
+
+    this.init();
 
 }
 

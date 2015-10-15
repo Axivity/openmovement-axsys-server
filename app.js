@@ -98,7 +98,6 @@ function createDBAndStartDeviceDiscovery() {
     }).catch((err) => {
         console.error(err);
     });
-
 }
 
 function secureOriginsToServe(app) {
