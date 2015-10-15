@@ -32,6 +32,7 @@ function WebSocketConnection(onConnected, clientKey) {
 
             let fns = self.callbacks[eventName];
 
+
             if(fns) {
                 let payload = msg.data;
                 console.log(payload);
@@ -49,7 +50,7 @@ function WebSocketConnection(onConnected, clientKey) {
                 } );
 
             } else {
-                console.warn('No callbacks registered for event ' + eventName );
+                console.warn('No callbacks registered for event ' + eventName);
             }
 
         }
@@ -98,7 +99,6 @@ function API(onDeviceAdded,
              clientKey) {
 
     var conn = new WebSocketConnection(onConnected, clientKey);
-    console.log(conn);
 
     /*
     *
