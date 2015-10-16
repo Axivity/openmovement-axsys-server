@@ -60,6 +60,8 @@ gulp.task('dist-client', function() {
         .on('error', function(err) {console.error(err); this.emit('end');} )
         .pipe(source('client.min.js'))
         .pipe(buffer())
-        .pipe(uglify())
+        .pipe(sourcemaps.init({loadMaps: true}))
+        //.pipe(uglify())
+        .pipe(sourcemaps.write())
         .pipe(gulp.dest('dist-client'));
 });
