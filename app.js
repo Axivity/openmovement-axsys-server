@@ -16,6 +16,8 @@ import { EventBus } from './lib/services/bus';
 import * as constants from './lib/services/event-name-constants';
 import * as websocketFacade from './lib/api/websocket-api';
 import * as socketBroadcastService from './lib/services/socket-broadcast-service';
+import {AxsysError, Payload} from './lib/api/payload';
+import * as stringUtils from './lib/utils/string-utils';
 
 /* Global constants */
 const DEVICES_DATABASE_NAME = 'axsys-devices';
@@ -60,23 +62,25 @@ function subscribeDBEvents(db) {
 }
 
 
+// TODO: May be this function should live behind API interface?
 function subscribeSocketEvents(sock) {
-    // TODO: Maybe this can be refactored. We don't need DB to come up to push on socket!
     eventBus.subscribe(constants.AX_DEVICE_ADDED, function (device) {
         sock.clients.forEach(function (client) {
             console.log(device);
+            let payload = new Payload(null, device, null);
             client.send(JSON.stringify({
                 'event': constants.AX_DEVICE_ADDED,
-                'data': device
+                'data': payload
             }));
         });
     });
 
     eventBus.subscribe(constants.AX_DEVICE_REMOVED, function (device) {
         sock.clients.forEach(function (client) {
+            let payload = new Payload(null, device, null);
             client.send(JSON.stringify({
                 'event': constants.AX_DEVICE_REMOVED,
-                'data': device
+                'data': payload
             }));
         });
     });
