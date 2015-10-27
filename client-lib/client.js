@@ -24,6 +24,8 @@ function WebSocketConnection(onDeviceAdded,
 
     self.callbacks = {};
 
+    self.dataListener = onDataReceived;
+
     ws.onopen = function() {
         onConnected();
     };
@@ -65,7 +67,16 @@ function WebSocketConnection(onDeviceAdded,
             if(fn) {
                 let payload = msg.data;
                 if(!hasError(payload)) {
-                    fn(getData(payload));
+                    // Amend data with path
+                    let data = getData(payload);
+                    data.path = devicePath;
+                    fn(data);
+
+                } else {
+                    // Hmm error goes same way?
+                    let data = getError(payload);
+                    data.path = devicePath;
+                    fn(data);
                 }
             } else {
                 console.warn('Cannot find callback for ' + eventName);
@@ -78,7 +89,7 @@ function WebSocketConnection(onDeviceAdded,
         // Add a data listener
         addCallbackForEvent(constants.AX_CLIENT_DATA, (payload) => {
             // TODO: We could manipulate array buffer here??
-            onDataReceived(payload);
+            self.dataListener(payload);
         });
 
         addCallbackForEvent(constants.AX_DEVICE_ADDED, (payload) => {
@@ -109,6 +120,10 @@ function WebSocketConnection(onDeviceAdded,
         }
     }
 
+    function replaceDataListener(callback) {
+        self.dataListener = callback;
+    }
+
     function send(event, data, callback) {
         var msg = {
             'event': event,
@@ -123,9 +138,11 @@ function WebSocketConnection(onDeviceAdded,
 
     init();
 
+    // API for this object
     return {
         'addCallbackForEvent': addCallbackForEvent,
-        'send': send
+        'send': send,
+        'replaceDataListener': replaceDataListener
     };
 
  }
@@ -134,6 +151,7 @@ function API(onDeviceAdded,
              onDeviceRemoved,
              onConnected,
              onDisconnected,
+             // default data listener - you can replace it later too
              onDataReceived,
              clientKey) {
 
@@ -144,31 +162,49 @@ function API(onDeviceAdded,
                         onDataReceived,
                         clientKey);
 
-    /*
-    *
-    * */
+    /**
+     *
+     * @param callback
+     */
     this.getDevices = (callback) => {
         conn.send(constants.AX_CLIENT_DEVICES_GET_ALL, {}, callback);
     };
 
 
-    /*
-     * */
+    /**
+     *
+     * @param options
+     * @param callback
+     */
     this.connect = (options, callback) => {
         conn.send(constants.AX_DEVICE_CONNECT, options, callback);
 
     };
 
-    /*
-     * */
+    /**
+     *
+     * @param options
+     * @param callback
+     */
     this.write = (options, callback) => {
         conn.send(constants.AX_DEVICE_WRITE, options, callback);
     };
 
-    /*
-     * */
+    /**
+     *
+     * @param options
+     * @param callback
+     */
     this.disconnect = (options, callback) => {
         conn.send(constants.AX_DEVICE_DISCONNECT, options, callback);
+    };
+
+    /**
+     *
+     * @param callback
+     */
+    this.replaceDataListener = (callback) => {
+        conn.replaceDataListener(callback);
     };
 
 }
