@@ -6,3 +6,4 @@ axsys_sample_db/*
 dist-client/*
 out/*
 npm-debug.log*
+.flowconfig

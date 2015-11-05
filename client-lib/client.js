@@ -73,10 +73,11 @@ function WebSocketConnection(onDeviceAdded,
                     fn(data);
 
                 } else {
-                    // Hmm error goes same way?
                     let data = getError(payload);
-                    data.path = devicePath;
-                    fn(data);
+                    console.error(data);
+                    // Hmm error goes same way?
+                    // data.path = devicePath;
+                    // fn(data);
                 }
             } else {
                 console.warn('Cannot find callback for ' + eventName);
@@ -102,10 +103,10 @@ function WebSocketConnection(onDeviceAdded,
     }
 
     function addCallbackForEvent(event, callback, pathForDevice) {
-        console.log(event);
-        console.log(callback);
+        //console.log(event);
+        //console.log(callback);
 
-        console.log(self.callbacks);
+        //console.log(self.callbacks);
 
         if(pathForDevice) {
             // per device callback setup
