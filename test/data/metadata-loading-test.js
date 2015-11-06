@@ -13,7 +13,7 @@ describe('CWA file', () => {
 
     describe('when header is loaded', () => {
 
-        it('should be possible to read metadata', () => {
+        it('should be possible to read metadata even when no metadata present', () => {
             const fullFileName = path.join(__dirname, 'LochanWeekend.CWA');
             fs.open(fullFileName, 'r', (err, fd) => {
                 if(err) {
@@ -30,17 +30,63 @@ describe('CWA file', () => {
                             if(buff.length < BLOCK_SIZE_IN_BYTES) {
                                 console.log('Doesnt have enough data to read');
                             }
-                            console.log(buff[0]);
-                            console.log(buff[1]);
-                            console.log(buff[2]);
-                            console.log(buff[3]);
-                            console.log(buff[4]);
-                            console.log(buff[5]);
-                            console.log(buff[6]);
-                            console.log(buff[7]);
-                            console.log(buff[8]);
-                            console.log(buff[9]);
-                            console.log(buff[10]);
+
+                            let metaData = buff.slice(64, METADATA_SIZE_IN_BYTES);
+
+                            console.log(metaData);
+                            console.log(metaData.toString('ascii', 0, metaData.length));
+                            //console.log(buff[0]);
+                            //console.log(buff[1]);
+                            //console.log(buff[2]);
+                            //console.log(buff[3]);
+                            //console.log(buff[4]);
+                            //console.log(buff[5]);
+                            //console.log(buff[6]);
+                            //console.log(buff[7]);
+                            //console.log(buff[8]);
+                            //console.log(buff[9]);
+                            //console.log(buff[10]);
+                        }
+
+                    });
+                }
+            });
+
+        });
+
+        it('should be possible to read metadata when metadata is present', () => {
+            const fullFileName = path.join(__dirname, 'LochanWeekend.CWA');
+            fs.open(fullFileName, 'r', (err, fd) => {
+                if(err) {
+                    console.log('Cannot read file');
+                    console.log(err);
+                } else {
+                    let buffer = new Buffer(HEADER_SIZE_IN_BYTES);
+                    fs.read(fd, buffer, 0, HEADER_SIZE_IN_BYTES, null, (err, chunksRead, buff) => {
+                        if(err) {
+                            console.log(err);
+
+                        } else {
+                            console.log(chunksRead);
+                            if(buff.length < BLOCK_SIZE_IN_BYTES) {
+                                console.log('Doesnt have enough data to read');
+                            }
+
+                            let metaData = buff.slice(64, METADATA_SIZE_IN_BYTES);
+
+                            console.log(metaData);
+                            console.log(metaData.toString('ascii', 0, metaData.length));
+                            //console.log(buff[0]);
+                            //console.log(buff[1]);
+                            //console.log(buff[2]);
+                            //console.log(buff[3]);
+                            //console.log(buff[4]);
+                            //console.log(buff[5]);
+                            //console.log(buff[6]);
+                            //console.log(buff[7]);
+                            //console.log(buff[8]);
+                            //console.log(buff[9]);
+                            //console.log(buff[10]);
                         }
 
                     });

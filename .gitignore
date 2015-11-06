@@ -7,3 +7,5 @@ dist-client/*
 out/*
 npm-debug.log*
 .flowconfig
+tools/flow-simple-windows/*
+tmp_build_flow/*
