@@ -13,6 +13,7 @@ import path from 'path';
 import http from 'http';
 import { Server as WebSocketServer } from 'ws';
 import express from 'express';
+import {createStore} from 'redux';
 
 /* Internal imports */
 import * as register_module from './lib/register-client';
@@ -24,6 +25,8 @@ import * as websocketFacade from './lib/api/websocket-api';
 import * as socketBroadcastService from './lib/services/socket-broadcast-service';
 import {AxsysError, Payload} from './lib/api/payload';
 import * as stringUtils from './lib/utils/string-utils';
+import cacheReducer from './lib/reducers/cache-reducer';
+import * as actionCreators from './lib/action-creators/cache-action-creator';
 
 /* Global constants */
 const DEVICES_DATABASE_NAME = 'axsys-devices';
@@ -32,6 +35,7 @@ const DEVICES_DATABASE_NAME = 'axsys-devices';
 let DEVICES_DB;
 let eventBus = new EventBus();
 
+const store = createStore(cacheReducer);
 
 /* main */
 function main() {
@@ -55,6 +59,9 @@ function main() {
 
     subscribeSocketEvents(wss);
 
+    // TODO: Experimental at the minute - cleanup all unnecessary services
+    subscribeCacheEvents();
+
     // setup static route for client.min.js
     setUpRouteForClientLibrary(app);
 
@@ -65,6 +72,28 @@ function main() {
 function subscribeDBEvents(db) {
     eventBus.subscribe(constants.AX_DEVICE_ADDED, dbService.onDeviceAdded(db));
     eventBus.subscribe(constants.AX_DEVICE_REMOVED, dbService.onDeviceRemoved(db));
+}
+
+
+function subscribeCacheEvents() {
+    eventBus.subscribe(constants.AX_DEVICE_ADDED, function(device) {
+        let path = stringUtils.removeWindowsPrefixToSerialPath(device.port);
+        let devicePath = stringUtils.constructSerialPath(path);
+        store.dispatch(actionCreators.createDeviceWithAttributes({
+            devicePath: devicePath,
+            deviceAttributes: device
+        }));
+        console.log(store.getState());
+    });
+
+    eventBus.subscribe(constants.AX_DEVICE_REMOVED, function(device) {
+        let path = stringUtils.removeWindowsPrefixToSerialPath(device.port);
+        let devicePath = stringUtils.constructSerialPath(path);
+        store.dispatch(actionCreators.removeDeviceWithAttributes({
+            devicePath: devicePath
+        }));
+        console.log(store.getState());
+    });
 }
 
 

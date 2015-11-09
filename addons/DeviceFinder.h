@@ -25,6 +25,7 @@
 
 // Device Finder
 // Dan Jackson, 2011-2012
+// Praveen Kumar, 2015
 
 
 #ifndef DEVICEFINDER_H

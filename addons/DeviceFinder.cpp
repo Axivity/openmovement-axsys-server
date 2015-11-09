@@ -25,6 +25,7 @@
 
 // Device Finder
 // Dan Jackson, 2011-2012
+// Praveen Kumar, 2015
 
 // NOTE: Finding the pairs of CDC and MSD instances, together with their composite parent device serial number, 
 //       is quite a mess on Windows.  This file is still a complete mess from getting it working!

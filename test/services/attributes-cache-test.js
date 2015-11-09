@@ -5,7 +5,8 @@
 import {expect} from 'chai';
 import {List, Map} from 'immutable';
 
-import {device_id_t, upsertAttribute, removeDeviceWithAttributes} from '../../lib/services/attributes-cache';
+import {device_id_t, createDeviceWithAttributesInCache,
+    upsertAttribute, removeDeviceWithAttributes} from '../../lib/services/attributes-cache';
 
 const BATTERY_ATTRIBUTE_NAME = 'battery';
 const HARDWARE_VERSION = 'hardware';
@@ -109,6 +110,29 @@ describe('Cache service', () => {
             let nextState1 = upsertAttribute(initialState, deviceId, BATTERY_ATTRIBUTE_NAME, complexAttrValue);
             expect(nextState1).to.equal(expectedState1);
 
+
+        });
+
+    });
+
+    describe('when device is added', () => {
+        it('should create all attributes at once', () => {
+            let initialState = Map({});
+
+            let newDeviceAttrbs = Map({
+                path: 'path1',
+                attr1: 'attr1',
+                attr2: 'attr2'
+            });
+
+            let expectedState = Map({
+                "serial://path1": newDeviceAttrbs
+            });
+
+            let deviceId:device_id_t = "serial://path1";
+
+            let newState = createDeviceWithAttributesInCache(initialState, deviceId, newDeviceAttrbs);
+            expect(newState).to.equal(expectedState);
 
         });
 
