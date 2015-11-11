@@ -30,7 +30,8 @@ gulp.task('test', function () {
             reporter: 'list',
             compilers: {
                 js: babel_c
-            }
+            },
+            require: ['./test/test_helper']
         }));
 });
 

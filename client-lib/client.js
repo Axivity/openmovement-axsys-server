@@ -3,7 +3,7 @@
  */
 
 import { hasError, getData, getError } from '../lib/api/payload';
-import * as constants from '../lib/services/event-name-constants';
+import * as constants from '../lib/constants/event-name-constants';
 import * as binUtils from '../lib/utils/binary';
 
 var AX = window.AX || {};
@@ -13,6 +13,7 @@ function WebSocketConnection(onDeviceAdded,
                              onConnected,
                              onDisconnected,
                              onDataReceived,
+                             onAttributesDataPublished,
                              clientKey) {
 
     var ws = new WebSocket('ws://localhost:9693/');
@@ -100,6 +101,10 @@ function WebSocketConnection(onDeviceAdded,
         addCallbackForEvent(constants.AX_DEVICE_REMOVED, (payload) => {
             onDeviceRemoved(payload);
         });
+
+        addCallbackForEvent(constants.AX_ATTRIBUTE_CACHE_PUBLISH, (payload) => {
+            onAttributesDataPublished(payload);
+        });
     }
 
     function addCallbackForEvent(event, callback, pathForDevice) {
@@ -154,6 +159,7 @@ function API(onDeviceAdded,
              onDisconnected,
              // default data listener - you can replace it later too
              onDataReceived,
+             onAttributesDataPublished,
              clientKey) {
 
     var conn = new WebSocketConnection(onDeviceAdded,
@@ -161,6 +167,7 @@ function API(onDeviceAdded,
                         onConnected,
                         onDisconnected,
                         onDataReceived,
+                        onAttributesDataPublished,
                         clientKey);
 
     /**

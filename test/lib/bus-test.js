@@ -5,7 +5,7 @@
 import { expect } from 'chai';
 
 import { EventBus } from '../../lib/services/bus';
-import * as constants from '../../lib/services/event-name-constants';
+import * as constants from '../../lib/constants/event-name-constants';
 
 describe('EventBus', () => {
     describe('on subscribe', () => {

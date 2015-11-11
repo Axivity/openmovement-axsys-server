@@ -20,7 +20,7 @@ import * as register_module from './lib/register-client';
 import * as dbService from './lib/services/pouchdb-service';
 import * as discoveryService from './lib/services/devicediscovery-service';
 import { EventBus } from './lib/services/bus';
-import * as constants from './lib/services/event-name-constants';
+import * as constants from './lib/constants/event-name-constants';
 import * as websocketFacade from './lib/api/websocket-api';
 import * as socketBroadcastService from './lib/services/socket-broadcast-service';
 import {AxsysError, Payload} from './lib/api/payload';
@@ -48,19 +48,19 @@ function main() {
 
     register_module.register(app);
 
+    // TODO: Experimental at the minute - cleanup all unnecessary services
+    subscribeCacheEvents();
+
     // setup db service and device discovery
     createDBAndStartDeviceDiscovery().then((db) => {
         // setup routes for client
-        websocketFacade.websocketSetup(wss, dbService, db);
+        websocketFacade.websocketSetup(wss, dbService, db, store);
 
         // subscribe to events
         subscribeDBEvents(db);
     });
 
     subscribeSocketEvents(wss);
-
-    // TODO: Experimental at the minute - cleanup all unnecessary services
-    subscribeCacheEvents();
 
     // setup static route for client.min.js
     setUpRouteForClientLibrary(app);
