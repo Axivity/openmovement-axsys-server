@@ -27,6 +27,7 @@ import {AxsysError, Payload} from './lib/api/payload';
 import * as stringUtils from './lib/utils/string-utils';
 import cacheReducer from './lib/reducers/cache-reducer';
 import * as actionCreators from './lib/action-creators/cache-action-creator';
+import timeSyncServer from 'timesync/server';
 
 /* Global constants */
 const DEVICES_DATABASE_NAME = 'axsys-devices';
@@ -37,6 +38,22 @@ let eventBus = new EventBus();
 
 const store = createStore(cacheReducer);
 
+//CORS middleware
+var allowCrossDomain = function(req, res, next) {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+    // intercept OPTIONS method
+    if ('OPTIONS' == req.method) {
+        res.send(200);
+    }
+    else {
+        next();
+    }
+};
+
+
 /* main */
 function main() {
     //let app = eio();
@@ -45,6 +62,10 @@ function main() {
     var server = http.createServer();
     var wss = new WebSocketServer( {'server': server} );
     var app = express();
+
+    console.log(timeSyncServer);
+    app.use(allowCrossDomain);
+    app.use('/timesync', timeSyncServer.requestHandler);
 
     register_module.register(app);
 

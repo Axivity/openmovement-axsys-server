@@ -5,6 +5,14 @@
 import { hasError, getData, getError } from '../lib/api/payload';
 import * as constants from '../lib/constants/event-name-constants';
 import * as binUtils from '../lib/utils/binary';
+// TODO: THIS ISN'T WORKING AT THE MOMENT - WORK AROUND IS TO DYNAMICALLY CREATE A SCRIPT TAG
+// WHEN TIME PERMITS I'LL MOVE THIS CODE TO WEB SOCKET.
+//import * as timeSync from 'timesync';
+
+
+const SERVER_HTTP_PROTOCOL = "http://";
+const SERVER_WS_PROTOCOL = "ws://";
+const SERVER = "localhost:9693";
 
 var AX = window.AX || {};
 
@@ -16,7 +24,7 @@ function WebSocketConnection(onDeviceAdded,
                              onAttributesDataPublished,
                              clientKey) {
 
-    var ws = new WebSocket('ws://localhost:9693/');
+    var ws = new WebSocket(SERVER_WS_PROTOCOL + SERVER + '/');
     ws.binaryType = "arraybuffer";
 
     var self = this;
@@ -39,14 +47,10 @@ function WebSocketConnection(onDeviceAdded,
     ws.onmessage = function(event) {
         var fn;
         let msg = JSON.parse(event.data);
-        console.log(msg);
 
         if(msg) {
             let eventName = msg.event;
-            console.log(eventName);
-            console.log(self.callbacks);
             let devicePath = msg.data.path;
-            console.log(devicePath);
 
             // For AX_CLIENT_DATA there's a global data listener. It's
             // up to the call site to decide what to do with it.
@@ -62,15 +66,17 @@ function WebSocketConnection(onDeviceAdded,
                 // Global callbacks are handled here, along with
                 // AX_CLIENT_DATA though it has device path
                 fn = self.callbacks[eventName];
-
             }
 
             if(fn) {
                 let payload = msg.data;
                 if(!hasError(payload)) {
-                    // Amend data with path
+
                     let data = getData(payload);
-                    data.path = devicePath;
+                    if(devicePath) {
+                        // Amend data with path if present
+                        data.path = devicePath;
+                    }
                     fn(data);
 
                 } else {
@@ -108,11 +114,6 @@ function WebSocketConnection(onDeviceAdded,
     }
 
     function addCallbackForEvent(event, callback, pathForDevice) {
-        //console.log(event);
-        //console.log(callback);
-
-        //console.log(self.callbacks);
-
         if(pathForDevice) {
             // per device callback setup
             if(self.callbacks[pathForDevice] === undefined) {
@@ -150,8 +151,20 @@ function WebSocketConnection(onDeviceAdded,
         'send': send,
         'replaceDataListener': replaceDataListener
     };
-
  }
+
+function setupTimeSyncScriptTag(cb) {
+    var tag = document.createElement('script');
+    var ts = null;
+    tag.onload = () => {
+        cb();
+    };
+    tag.src = SERVER_HTTP_PROTOCOL + SERVER + '/timesync/timesync.min.js';
+    document.body.appendChild(tag);
+    return {
+        'ts': ts
+    };
+}
 
 function API(onDeviceAdded,
              onDeviceRemoved,
@@ -162,6 +175,15 @@ function API(onDeviceAdded,
              onAttributesDataPublished,
              clientKey) {
 
+    var server = null;
+
+    setupTimeSyncScriptTag(() => {
+        server = timesync.create({
+            server: SERVER_HTTP_PROTOCOL + SERVER + '/timesync',
+            interval: 10000
+        });
+    });
+
     var conn = new WebSocketConnection(onDeviceAdded,
                         onDeviceRemoved,
                         onConnected,
@@ -169,7 +191,6 @@ function API(onDeviceAdded,
                         onDataReceived,
                         onAttributesDataPublished,
                         clientKey);
-
     /**
      *
      * @param callback
@@ -215,6 +236,17 @@ function API(onDeviceAdded,
         conn.replaceDataListener(callback);
     };
 
+    /**
+     *
+     * @returns Current server time compatible with moment
+     */
+    this.getCurrentTime = () => {
+        if(server !== null) {
+            return server.now();
+        } else {
+            console.warn('Time sync server not loaded');
+        }
+    }
 }
 
 // export API
