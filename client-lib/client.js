@@ -236,6 +236,10 @@ function API(onDeviceAdded,
         conn.replaceDataListener(callback);
     };
 
+    this.publish = (options, callback) => {
+        conn.send(constants.AX_DEVICE_ATTRIBUTE_PUBLISH, options, callback);
+    };
+
     /**
      *
      * @returns Current server time compatible with moment
