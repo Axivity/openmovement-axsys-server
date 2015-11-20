@@ -5,8 +5,12 @@
 import {expect} from 'chai';
 import {List, Map} from 'immutable';
 
-import {device_id_t, createDeviceWithAttributesInCache,
-    upsertAttribute, removeDeviceWithAttributes} from '../../lib/services/attributes-cache';
+import {device_id_t,
+    createDeviceWithAttributesInCache,
+    upsertAttribute,
+    removeDeviceWithAttributes,
+    TIME_IN_MILLIS_KEY,
+    ATTRIBUTE_VALUE_KEY} from '../../lib/services/attributes-cache';
 
 const BATTERY_ATTRIBUTE_NAME = 'battery';
 const HARDWARE_VERSION = 'hardware';
@@ -23,11 +27,18 @@ describe('Cache service', () => {
 
             let expectedState = Map({
                 [deviceId]: Map({
-                    [BATTERY_ATTRIBUTE_NAME]: 100
+                    [BATTERY_ATTRIBUTE_NAME]:  Map({
+                        [TIME_IN_MILLIS_KEY]: 1234567890000,
+                        [ATTRIBUTE_VALUE_KEY]: 100
+                    })
                 })
             });
 
-            let nextState = upsertAttribute(initialState, deviceId, BATTERY_ATTRIBUTE_NAME, 100);
+            let nextState = upsertAttribute(initialState,
+                                            deviceId,
+                                            BATTERY_ATTRIBUTE_NAME,
+                                            100,
+                                            () => {return 1234567890000;});
             expect(nextState).to.equal(expectedState);
 
         });
@@ -35,46 +46,81 @@ describe('Cache service', () => {
         it('should update the attribute for device if device already exists', () => {
             let initialState = Map({
                 [deviceId]: Map({
-                    [BATTERY_ATTRIBUTE_NAME]: 100
+                    [BATTERY_ATTRIBUTE_NAME]: Map({
+                        [TIME_IN_MILLIS_KEY]: 1234567890000,
+                        [ATTRIBUTE_VALUE_KEY]: 100
+                    })
                 })
             });
 
             let expectedState1 = Map({
                 [deviceId]: Map({
-                    [BATTERY_ATTRIBUTE_NAME]: 100,
-                    [HARDWARE_VERSION]: 17
+                    [BATTERY_ATTRIBUTE_NAME]: Map({
+                        [TIME_IN_MILLIS_KEY]: 1234567890000,
+                        [ATTRIBUTE_VALUE_KEY]: 100
+                    }),
+                    [HARDWARE_VERSION]: Map({
+                        [TIME_IN_MILLIS_KEY]: 1234567890000,
+                        [ATTRIBUTE_VALUE_KEY]: 17
+                    })
                 })
             });
 
-            let nextState1 = upsertAttribute(initialState, deviceId, HARDWARE_VERSION, 17);
+            let nextState1 = upsertAttribute(initialState,
+                                            deviceId,
+                                            HARDWARE_VERSION,
+                                            17,
+                                            () => {return 1234567890000;});
             expect(nextState1).to.equal(expectedState1);
 
             let expectedState2 = Map({
                 [deviceId]: Map({
-                    [BATTERY_ATTRIBUTE_NAME]: 100,
-                    [HARDWARE_VERSION]: 17,
-                    [SOFTWARE_VERSION]: 45
+                    [BATTERY_ATTRIBUTE_NAME]: Map({
+                        [TIME_IN_MILLIS_KEY]: 1234567890000,
+                        [ATTRIBUTE_VALUE_KEY]: 100
+                    }),
+                    [HARDWARE_VERSION]: Map({
+                        [TIME_IN_MILLIS_KEY]: 1234567890000,
+                        [ATTRIBUTE_VALUE_KEY]: 17
+                    }),
+                    [SOFTWARE_VERSION]: Map({
+                        [TIME_IN_MILLIS_KEY]: 1234567890000,
+                        [ATTRIBUTE_VALUE_KEY]: 45
+                    })
                 })
             });
 
-            let nextState2 = upsertAttribute(nextState1, deviceId, SOFTWARE_VERSION, 45);
+            let nextState2 = upsertAttribute(nextState1,
+                                            deviceId,
+                                            SOFTWARE_VERSION,
+                                            45,
+                                            () => {return 1234567890000;});
             expect(nextState2).to.equal(expectedState2);
         });
 
         it('should update the attribute itself when attribute already exists for device', () => {
             let initialState = Map({
                 [deviceId]: Map({
-                    [BATTERY_ATTRIBUTE_NAME]: 100
+                    [BATTERY_ATTRIBUTE_NAME]: Map({
+                        [TIME_IN_MILLIS_KEY]: 1234567890000,
+                        [ATTRIBUTE_VALUE_KEY]: 100
+                    })
                 })
             });
 
             let expectedState1 = Map({
                 [deviceId]: Map({
-                    [BATTERY_ATTRIBUTE_NAME]: 97
+                    [BATTERY_ATTRIBUTE_NAME]: Map({
+                        [TIME_IN_MILLIS_KEY]: 1234567890000,
+                        [ATTRIBUTE_VALUE_KEY]: 97
+                    })
                 })
             });
-
-            let nextState1 = upsertAttribute(initialState, deviceId, BATTERY_ATTRIBUTE_NAME, 97);
+            let nextState1 = upsertAttribute(initialState,
+                                            deviceId,
+                                            BATTERY_ATTRIBUTE_NAME,
+                                            97,
+                                            () => {return 1234567890000;});
             expect(nextState1).to.equal(expectedState1);
 
 
@@ -84,9 +130,11 @@ describe('Cache service', () => {
             let initialState = Map({
                 [deviceId]: Map({
                     [BATTERY_ATTRIBUTE_NAME]: Map({
-                        'timeUpdated': '2015-11-12T23:00:00Z',
-                        'frequencyInSecs': 60,
-                        'value': 85
+                        [TIME_IN_MILLIS_KEY]: 1234567890000,
+                        [ATTRIBUTE_VALUE_KEY]: Map({
+                            'frequencyInSecs': 60,
+                            'complexValue': 85
+                        })
                     })
                 })
             });
@@ -94,20 +142,25 @@ describe('Cache service', () => {
             let expectedState1 = Map({
                 [deviceId]: Map({
                     [BATTERY_ATTRIBUTE_NAME]: Map({
-                        'timeUpdated': '2015-11-12T23:01:00Z',
-                        'frequencyInSecs': 60,
-                        'value': 94
+                        [TIME_IN_MILLIS_KEY]: 1234567890000,
+                        [ATTRIBUTE_VALUE_KEY]: Map({
+                            'frequencyInSecs': 60,
+                            'complexValue': 94
+                        })
                     })
                 })
             });
 
             let complexAttrValue = Map({
-                'timeUpdated': '2015-11-12T23:01:00Z',
                 'frequencyInSecs': 60,
-                'value': 94
+                'complexValue': 94
             });
 
-            let nextState1 = upsertAttribute(initialState, deviceId, BATTERY_ATTRIBUTE_NAME, complexAttrValue);
+            let nextState1 = upsertAttribute(initialState,
+                                            deviceId,
+                                            BATTERY_ATTRIBUTE_NAME,
+                                            complexAttrValue,
+                                            () => {return 1234567890000});
             expect(nextState1).to.equal(expectedState1);
 
 
@@ -126,10 +179,8 @@ describe('Cache service', () => {
             });
 
             let expectedState = Map({
-                "serial://path1": newDeviceAttrbs
+                [deviceId]: newDeviceAttrbs
             });
-
-            let deviceId:device_id_t = "serial://path1";
 
             let newState = createDeviceWithAttributesInCache(initialState, deviceId, newDeviceAttrbs);
             expect(newState).to.equal(expectedState);

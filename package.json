@@ -17,6 +17,8 @@
     "express.oi": "0.0.19",
     "immutable": "^3.7.5",
     "immutablediff": "^0.4.2",
+    "immutablepatch": "^0.2.2",
+    "log4js": "^0.6.28",
     "moment": "^2.10.6",
     "nan": "1.8.4",
     "node-gyp": "2.0.2",

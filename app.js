@@ -8,8 +8,12 @@
 import path from 'path';
 
 /* Third party imports */
-//import eio from 'express.io';
-//import eio from 'express.oi';
+import log4js from 'log4js';
+log4js.replaceConsole();
+log4js.loadAppender('file');
+log4js.addAppender(log4js.appenders.file('axsys-server.log'));
+
+
 import http from 'http';
 import { Server as WebSocketServer } from 'ws';
 import express from 'express';
