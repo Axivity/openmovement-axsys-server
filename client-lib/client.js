@@ -236,13 +236,18 @@ function API(onDeviceAdded,
         conn.replaceDataListener(callback);
     };
 
+    /**
+     *
+     * @param options
+     * @param callback
+     */
     this.publish = (options, callback) => {
         conn.send(constants.AX_DEVICE_ATTRIBUTE_PUBLISH, options, callback);
     };
 
     /**
      *
-     * @returns Current server time compatible with moment
+     * @returns Current server time compatible in millis
      */
     this.getCurrentTime = () => {
         if(server !== null) {

@@ -2,7 +2,9 @@
  * Created by Praveen on 09/11/2015.
  */
 
+import {List, Map} from 'immutable';
 import {createStore} from 'redux';
+import {expect} from 'chai';
 
 import * as actionCreators from '../../lib/action-creators/cache-action-creator';
 import * as storeHelpers from '../../lib/store/store-helpers';
@@ -19,8 +21,6 @@ describe('Store', () => {
     describe('when observed for state changes', () => {
 
         it('should not push whole state rather should push changes only', () => {
-
-            let localState =
 
             storeHelpers.observeStore(store,
                 // state selector
@@ -67,6 +67,74 @@ describe('Store', () => {
 
         });
 
-    })
+    });
+
+    describe('When getParentForLeafNode is called ', () => {
+        it('should find the immediate parent node for that leaf node', () => {
+            let expected = [ 'foo:abc', '1'];
+            let nodesUptoLeaf = storeHelpers.getParentForLeafNode('foo:abc/1/boo');
+            expect(nodesUptoLeaf).to.deep.equal(expected);
+        });
+
+        it('should find the immediate parent node for that leaf node even when path starts with /', () => {
+            let expected = [ 'serial:~1~1123COM~1', 'a'];
+            let nodesUptoLeaf = storeHelpers.getParentForLeafNode('/serial:~1~1123COM~1/a/att2');
+            expect(nodesUptoLeaf).to.deep.equal(expected);
+        })
+
+    });
+
+    describe('When buildChangesListTillPreviousNonLeafNode is called ', () => {
+        it('should build new objects list up to parent node', () => {
+
+            let currentState = Map({
+               'serial://path1': Map({
+                   'attr1': Map({
+                       'timeUpdatedInMillis': 1234567890,
+                       'value': 'boo'
+                   }),
+                   'attr2': Map({
+                       "timeUpdatedInMillis": 1448364318685,
+                       "value": "attr2V"
+                   })
+               })
+            });
+
+            let changesList = List( [
+                Map(
+                    {
+                        "op": "add",
+                        "path": "/serial:~1~1path1/attr2/timeUpdatedInMillis",
+                        "value": 1448364318685
+                    }
+                )
+            ]);
+
+            let expectedChangesList = List( [
+                Map(
+                    {
+                        "op": "add",
+                        "path": "/serial:~1~1path1/attr2",
+                        "value": Map({
+                            "timeUpdatedInMillis": 1448364318685,
+                            "value": "attr2V"
+                        })
+                    }
+                )
+
+            ]);
+
+
+            let newChangesList = storeHelpers.buildChangesListTillPreviousNonLeafNode(
+                                        changesList,
+                                        currentState);
+            expect(newChangesList).to.equal(expectedChangesList);
+
+
+        });
+
+    });
+
+
 
 });
