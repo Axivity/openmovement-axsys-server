@@ -20,7 +20,6 @@ function WebSocketConnection(onDeviceAdded,
                              onDeviceRemoved,
                              onConnected,
                              onDisconnected,
-                             onDataReceived,
                              onAttributesDataPublished,
                              clientKey) {
 
@@ -32,8 +31,6 @@ function WebSocketConnection(onDeviceAdded,
     self.clientKey = clientKey || "default-key";
 
     self.callbacks = {};
-
-    self.dataListener = onDataReceived;
 
     ws.onopen = function() {
         onConnected();
@@ -52,9 +49,7 @@ function WebSocketConnection(onDeviceAdded,
             let eventName = msg.event;
             let devicePath = msg.data.path;
 
-            // For AX_CLIENT_DATA there's a global data listener. It's
-            // up to the call site to decide what to do with it.
-            if(devicePath && eventName !== constants.AX_CLIENT_DATA) {
+            if(devicePath) {
                 // Only device specific event callbacks are handled
                 let devCallbackObj = self.callbacks[devicePath];
 
@@ -63,8 +58,7 @@ function WebSocketConnection(onDeviceAdded,
                 }
 
             } else {
-                // Global callbacks are handled here, along with
-                // AX_CLIENT_DATA though it has device path
+                // Global callbacks are handled here
                 fn = self.callbacks[eventName];
             }
 
@@ -94,12 +88,6 @@ function WebSocketConnection(onDeviceAdded,
     };
 
     function init() {
-        // Add a data listener
-        addCallbackForEvent(constants.AX_CLIENT_DATA, (payload) => {
-            // TODO: We could manipulate array buffer here??
-            self.dataListener(payload);
-        });
-
         addCallbackForEvent(constants.AX_DEVICE_ADDED, (payload) => {
             onDeviceAdded(payload);
         });
@@ -127,10 +115,6 @@ function WebSocketConnection(onDeviceAdded,
         }
     }
 
-    function replaceDataListener(callback) {
-        self.dataListener = callback;
-    }
-
     function send(event, data, callback) {
         var msg = {
             'event': event,
@@ -148,8 +132,7 @@ function WebSocketConnection(onDeviceAdded,
     // API for this object
     return {
         'addCallbackForEvent': addCallbackForEvent,
-        'send': send,
-        'replaceDataListener': replaceDataListener
+        'send': send
     };
  }
 
@@ -171,7 +154,6 @@ function API(onDeviceAdded,
              onConnected,
              onDisconnected,
              // default data listener - you can replace it later too
-             onDataReceived,
              onAttributesDataPublished,
              clientKey) {
 
@@ -188,7 +170,6 @@ function API(onDeviceAdded,
                         onDeviceRemoved,
                         onConnected,
                         onDisconnected,
-                        onDataReceived,
                         onAttributesDataPublished,
                         clientKey);
     /**
@@ -230,19 +211,21 @@ function API(onDeviceAdded,
 
     /**
      *
-     * @param callback
-     */
-    this.replaceDataListener = (callback) => {
-        conn.replaceDataListener(callback);
-    };
-
-    /**
-     *
      * @param options
      * @param callback
      */
     this.publish = (options, callback) => {
         conn.send(constants.AX_DEVICE_ATTRIBUTE_PUBLISH, options, callback);
+    };
+
+    /**
+     *
+     * @param devicePath
+     * @param cb
+     */
+    this.addDataListenerForDevice = (devicePath, cb) => {
+        // This will replace any existing listeners as well
+        conn.addCallbackForEvent(constants.AX_CLIENT_DATA, cb, devicePath);
     };
 
     /**
