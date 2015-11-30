@@ -21,24 +21,15 @@ import {createStore} from 'redux';
 
 /* Internal imports */
 import * as register_module from './lib/register-client';
-import * as dbService from './lib/services/pouchdb-service';
 import * as discoveryService from './lib/services/devicediscovery-service';
 import { EventBus } from './lib/services/bus';
 import * as constants from './lib/constants/event-name-constants';
 import * as websocketFacade from './lib/api/websocket-api';
-import * as socketBroadcastService from './lib/services/socket-broadcast-service';
 import {AxsysError, Payload} from './lib/api/payload';
 import * as stringUtils from './lib/utils/string-utils';
 import cacheReducer from './lib/reducers/cache-reducer';
 import * as actionCreators from './lib/action-creators/cache-action-creator';
 import timeSyncServer from 'timesync/server';
-
-/* Global constants */
-const DEVICES_DATABASE_NAME = 'axsys-devices';
-
-
-let DEVICES_DB;
-let eventBus = new EventBus();
 
 const store = createStore(cacheReducer);
 
@@ -60,9 +51,6 @@ var allowCrossDomain = function(req, res, next) {
 
 /* main */
 function main() {
-    //let app = eio();
-    //app.http().io();
-
     var server = http.createServer();
     var wss = new WebSocketServer( {'server': server} );
     var app = express();
@@ -73,19 +61,19 @@ function main() {
 
     register_module.register(app);
 
-    // TODO: Experimental at the minute - cleanup all unnecessary services
-    subscribeCacheEvents();
+    let eventBus = new EventBus();
 
-    // setup db service and device discovery
-    createDBAndStartDeviceDiscovery().then((db) => {
-        // setup routes for client
-        websocketFacade.websocketSetup(wss, dbService, db, store);
-
-        // subscribe to events
-        subscribeDBEvents(db);
+    let deviceDiscoverer = new discoveryService.DeviceDiscovery({
+        eventBus: eventBus,
+        vidPids: [
+            0x04D80057
+        ]
     });
 
-    subscribeSocketEvents(wss);
+    deviceDiscoverer.start();
+    subscribeCacheEvents(eventBus);
+
+    websocketFacade.websocketSetup(wss, store);
 
     // setup static route for client.min.js
     setUpRouteForClientLibrary(app);
@@ -94,13 +82,8 @@ function main() {
     server.listen(9693);
 }
 
-function subscribeDBEvents(db) {
-    eventBus.subscribe(constants.AX_DEVICE_ADDED, dbService.onDeviceAdded(db));
-    eventBus.subscribe(constants.AX_DEVICE_REMOVED, dbService.onDeviceRemoved(db));
-}
 
-
-function subscribeCacheEvents() {
+function subscribeCacheEvents(eventBus) {
     eventBus.subscribe(constants.AX_DEVICE_ADDED, function(device) {
         let path = stringUtils.removeWindowsPrefixToSerialPath(device.port);
         let devicePath = stringUtils.constructSerialPath(path);
@@ -121,48 +104,6 @@ function subscribeCacheEvents() {
     });
 }
 
-
-// TODO: May be this function should live behind API interface?
-function subscribeSocketEvents(sock) {
-    eventBus.subscribe(constants.AX_DEVICE_ADDED, function (device) {
-        sock.clients.forEach(function (client) {
-            console.log(device);
-            let payload = new Payload(null, device, null);
-            client.send(JSON.stringify({
-                'event': constants.AX_DEVICE_ADDED,
-                'data': payload
-            }));
-        });
-    });
-
-    eventBus.subscribe(constants.AX_DEVICE_REMOVED, function (device) {
-        sock.clients.forEach(function (client) {
-            let payload = new Payload(null, device, null);
-            client.send(JSON.stringify({
-                'event': constants.AX_DEVICE_REMOVED,
-                'data': payload
-            }));
-        });
-    });
-}
-
-function createDBAndStartDeviceDiscovery() {
-    // create db and start device discovery
-    return dbService.createDatabase(DEVICES_DATABASE_NAME).then((db) => {
-        let deviceDiscoverer = new discoveryService.DeviceDiscovery({
-            eventBus: eventBus,
-            vidPids: [
-                0x04D80057
-            ]
-        });
-
-        deviceDiscoverer.start();
-        return db;
-
-    }).catch((err) => {
-        console.error(err);
-    });
-}
 
 function secureOriginsToServe(app) {
     // setup origins - TODO: this list should be externalized
