@@ -30,17 +30,21 @@ describe('Cache reducer', () => {
                 }
             };
 
-            let expectedState = Map({
-                [deviceId]: Map({
-                    attribute: Map({
-                        A: 'A',
-                        B: 'B'
-                    })
-                })
-            });
+            //let expectedState = Map({
+            //    [deviceId]: Map({
+            //        attribute: Map({
+            //            A: 'A',
+            //            B: 'B'
+            //        })
+            //    })
+            //});
 
             let newState = cacheReducer(initialState, action);
-            expect(newState).to.equal(expectedState);
+            // deep checks - done this way to avoid dynamic time addition, another option is to mock it!
+            expect(newState.hasIn([deviceId, 'attribute', 'timeUpdatedInMillis'])).to.be.true;
+            expect(newState.hasIn([deviceId, 'attribute', 'value'])).to.be.true;
+            expect(newState.hasIn([deviceId, 'attribute', 'value', 'A'])).to.be.true;
+            expect(newState.hasIn([deviceId, 'attribute', 'value', 'B'])).to.be.true;
 
         });
 
