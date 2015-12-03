@@ -91,7 +91,8 @@ function subscribeCacheEvents(eventBus) {
             devicePath: devicePath,
             deviceAttributes: device
         }));
-        console.log(store.getState());
+        console.log('Added new device');
+        //console.log(store.getState());
     });
 
     eventBus.subscribe(constants.AX_DEVICE_REMOVED, function(device) {
@@ -100,7 +101,8 @@ function subscribeCacheEvents(eventBus) {
         store.dispatch(actionCreators.removeDeviceWithAttributes({
             devicePath: devicePath
         }));
-        console.log(store.getState());
+        //console.log(store.getState());
+        console.log('Removed a device');
     });
 }
 
