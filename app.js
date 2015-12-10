@@ -71,7 +71,7 @@ function main() {
     });
 
     deviceDiscoverer.start();
-    subscribeCacheEvents(eventBus);
+    consumeDeviceAddedOrRemovedEventsIntoCacheStore(eventBus);
 
     websocketFacade.websocketSetup(wss, store);
 
@@ -83,7 +83,7 @@ function main() {
 }
 
 
-function subscribeCacheEvents(eventBus) {
+function consumeDeviceAddedOrRemovedEventsIntoCacheStore(eventBus) {
     eventBus.subscribe(constants.AX_DEVICE_ADDED, function(device) {
         let path = stringUtils.removeWindowsPrefixToSerialPath(device.port);
         let devicePath = stringUtils.constructSerialPath(path);
@@ -92,7 +92,6 @@ function subscribeCacheEvents(eventBus) {
             deviceAttributes: device
         }));
         console.log('Added new device');
-        //console.log(store.getState());
     });
 
     eventBus.subscribe(constants.AX_DEVICE_REMOVED, function(device) {
@@ -101,7 +100,6 @@ function subscribeCacheEvents(eventBus) {
         store.dispatch(actionCreators.removeDeviceWithAttributes({
             devicePath: devicePath
         }));
-        //console.log(store.getState());
         console.log('Removed a device');
     });
 }
