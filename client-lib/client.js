@@ -32,8 +32,24 @@ function WebSocketConnection(onDeviceAdded,
 
     self.callbacks = {};
 
+    function register() {
+        let msg = {};
+        msg.event = constants.AX_CLIENT_REGISTER;
+
+        msg.data = {};
+        msg.data.token = clientKey;
+
+        ws.send(JSON.stringify(msg));
+    }
+
     ws.onopen = function() {
-        onConnected();
+        register();
+        addCallbackForEvent(constants.AX_CLIENT_REGISTER, (msg) => {
+            let status = JSON.parse(msg).data.status;
+            if(status === 'SUCCESS') {
+                onConnected();
+            }
+        });
     };
 
     ws.onclose = function() {
