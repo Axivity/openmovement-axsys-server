@@ -45,9 +45,11 @@ function WebSocketConnection(onDeviceAdded,
     ws.onopen = function() {
         register();
         addCallbackForEvent(constants.AX_CLIENT_REGISTER, (msg) => {
-            let status = JSON.parse(msg).data.status;
+            let status = msg.status;
             if(status === 'SUCCESS') {
                 onConnected();
+            } else {
+                console.error('Handshake failed with server - check registration token');
             }
         });
     };
