@@ -238,6 +238,15 @@ function API(onDeviceAdded,
 
     /**
      *
+     * @param options
+     * @param callback
+     */
+    this.createProcess = (options, callback) => {
+        conn.send(constants.AX_CREATE_PROCESS, options, callback);
+    };
+
+    /**
+     *
      * @param devicePath
      * @param cb
      */
