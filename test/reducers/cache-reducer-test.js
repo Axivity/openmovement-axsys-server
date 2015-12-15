@@ -9,6 +9,7 @@ import * as actionCreators from '../../lib/action-creators/cache-action-creator'
 import * as actionTypes from '../../lib/constants/action-types';
 import cacheReducer from '../../lib/reducers/cache-reducer';
 
+
 const deviceId = 'serial://COM31';
 
 describe('Cache reducer', () => {

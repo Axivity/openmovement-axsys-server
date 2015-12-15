@@ -84,7 +84,7 @@ describe('Store', () => {
 
     });
 
-    describe('When buildChangesListTillPreviousNonLeafNode is called ', () => {
+    describe('When buildChangesListTillLastParentNode is called ', () => {
         it('should build new objects list up to parent node', () => {
 
             let currentState = Map({
@@ -125,7 +125,7 @@ describe('Store', () => {
             ]);
 
 
-            let newChangesList = storeHelpers.buildChangesListTillPreviousNonLeafNode(
+            let newChangesList = storeHelpers.buildChangesListTillLastParentNode(
                                         changesList,
                                         currentState);
             expect(newChangesList).to.equal(expectedChangesList);

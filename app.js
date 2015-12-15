@@ -27,11 +27,12 @@ import * as constants from './lib/constants/event-name-constants';
 import * as websocketFacade from './lib/api/websocket-api';
 import {AxsysError, Payload} from './lib/api/payload';
 import * as stringUtils from './lib/utils/string-utils';
-import cacheReducer from './lib/reducers/cache-reducer';
+//import cacheReducer from './lib/reducers/cache-reducer';
+import reducers from './lib/reducers/reducers';
 import * as actionCreators from './lib/action-creators/cache-action-creator';
 import timeSyncServer from 'timesync/server';
 
-const store = createStore(cacheReducer);
+const store = createStore(reducers);
 
 //CORS middleware
 var allowCrossDomain = function(req, res, next) {
