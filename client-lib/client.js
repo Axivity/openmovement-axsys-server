@@ -201,6 +201,15 @@ function API(onDeviceAdded,
 
     /**
      *
+     * @param callback
+     */
+    this.getFiles = (callback) => {
+        conn.send(constants.AX_CLIENT_FILES_GET_ALL, {}, callback);
+    };
+
+
+    /**
+     *
      * @param options
      * @param callback
      */
