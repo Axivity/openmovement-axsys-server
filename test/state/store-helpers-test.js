@@ -7,7 +7,7 @@ import {createStore} from 'redux';
 import {expect} from 'chai';
 
 import * as actionCreators from '../../lib/action-creators/cache-action-creator';
-import * as storeHelpers from '../../lib/store/store-helpers';
+import * as storeHelpers from '../../lib/state/store-helpers';
 import reducer from '../../lib/reducers/cache-reducer';
 
 
