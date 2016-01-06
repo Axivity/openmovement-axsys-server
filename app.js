@@ -72,37 +72,13 @@ function main() {
     });
 
     deviceDiscoverer.start();
-    consumeDeviceAddedOrRemovedEventsIntoCacheStore(eventBus);
-
-    websocketFacade.websocketSetup(wss, store);
+    websocketFacade.websocketSetup(wss, store, eventBus);
 
     // setup static route for client.min.js
     setUpRouteForClientLibrary(app);
 
     server.on('request', app);
     server.listen(9693);
-}
-
-
-function consumeDeviceAddedOrRemovedEventsIntoCacheStore(eventBus) {
-    eventBus.subscribe(constants.AX_DEVICE_ADDED, function(device) {
-        let path = stringUtils.removeWindowsPrefixToSerialPath(device.port);
-        let devicePath = stringUtils.constructSerialPath(path);
-        store.dispatch(actionCreators.createDeviceWithAttributes({
-            devicePath: devicePath,
-            deviceAttributes: device
-        }));
-        console.log('Added new device');
-    });
-
-    eventBus.subscribe(constants.AX_DEVICE_REMOVED, function(device) {
-        let path = stringUtils.removeWindowsPrefixToSerialPath(device.port);
-        let devicePath = stringUtils.constructSerialPath(path);
-        store.dispatch(actionCreators.removeDeviceWithAttributes({
-            devicePath: devicePath
-        }));
-        console.log('Removed a device');
-    });
 }
 
 
